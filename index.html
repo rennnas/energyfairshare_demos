@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Energy Share Fair Demos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Public+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: a centred column with three tabs; each tab is one survey "device" with a collapsible panel showing the recorded answers. */
+:root{
+  --bg:#F3F6F5; --surface:#FFFFFF; --surface-2:#E9EFED; --ink:#142120; --muted:#56635F; --line:#D3DCD9;
+  --accent:#0B6B66; --sun:#A86300; --sun-soft:#EBD3AE; --ok:#1F7A44; --ok-soft:#E3F2E8; --bad:#B23A2E; --res:#56635F;
+  --f-display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:ui-monospace,Consolas,"SFMono-Regular",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1514; --surface:#152020; --surface-2:#1C2928; --ink:#E2EBE9; --muted:#9AABA7; --line:#2C3B39;
+  --accent:#4FC3BA; --sun:#F0A845; --sun-soft:#5A4423; --ok:#5CCB8A; --ok-soft:#183427; --bad:#F08A7E; --res:#7E918D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1514; --surface:#152020; --surface-2:#1C2928; --ink:#E2EBE9; --muted:#9AABA7; --line:#2C3B39;
+  --accent:#4FC3BA; --sun:#F0A845; --sun-soft:#5A4423; --ok:#5CCB8A; --ok-soft:#183427; --bad:#F08A7E; --res:#7E918D; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;margin:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.page{max-width:820px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px;display:grid;gap:18px}
+.eyebrow{font-family:var(--f-display);font-weight:600;text-transform:uppercase;letter-spacing:.09em;font-size:.8rem;color:var(--accent)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.1;margin:4px 0 6px}
+.lede{margin:0;color:var(--muted);max-width:62ch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.tabs button{font:inherit;font-size:.92rem;font-weight:600;padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs button span{font-weight:400;opacity:.75}
+.demo{display:grid;gap:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.85rem;color:var(--muted)}
+.toolbar select{font:inherit;font-size:.85rem;padding:5px 8px;border-radius:5px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.device{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.bar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 18px;background:var(--surface-2);border-bottom:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+.prog{height:4px;background:var(--surface-2)}
+.prog i{display:block;height:100%;background:var(--accent);transition:width .25s}
+@media (prefers-reduced-motion: reduce){.prog i{transition:none}}
+.screen{padding:22px 22px 18px;display:grid;gap:18px;min-height:420px;align-content:start}
+.screen h2{font-size:1.15rem;line-height:1.35;margin:0}
+.help{font-size:.9rem;color:var(--muted);margin:0}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:14px 22px;border-top:1px solid var(--line)}
+.btn{font:inherit;font-size:.9rem;padding:8px 16px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:600}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+fieldset.q{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+fieldset.q legend{font-weight:600;font-size:.95rem;padding:0;margin-bottom:6px}
+.opts{display:grid;gap:6px}
+.opts.row{display:flex;flex-wrap:wrap;gap:6px}
+.opts.row .opt{flex:1 1 110px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:.92rem;line-height:1.35}
+.opt:hover{border-color:var(--muted)}
+.opt input{margin-top:2px;accent-color:var(--accent)}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+.range{display:grid;gap:4px}
+.range label{font-weight:600;font-size:.95rem}
+.range input{width:100%;accent-color:var(--accent)}
+.ends{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted)}
+.inline{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.inline input[type=number],.inline select{font:inherit;padding:6px 8px;border-radius:5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:8rem}
+.inline select{width:auto}
+.grid-wrap{overflow-x:auto}
+table.grid{border-collapse:collapse;font-size:.88rem;min-width:100%}
+table.grid th,table.grid td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:center}
+table.grid th:first-child,table.grid td:first-child{text-align:left}
+table.grid th{font-weight:600;color:var(--muted);font-size:.8rem}
+table.grid input{accent-color:var(--accent);width:18px;height:18px}
+
+/* statement and dashboard */
+.letter{border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:10px;background:var(--bg)}
+.brand{font-family:var(--f-display);font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:.8rem;color:var(--accent);display:flex;justify-content:space-between;gap:8px}
+.brand span{font-family:var(--f-body);font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)}
+.bill{width:100%;border-collapse:collapse;font-size:.88rem}
+.bill td{padding:5px 0;border-bottom:1px dotted var(--line);vertical-align:baseline}
+.bill td.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:12px}
+.bill tr.sum td{border-bottom:2px solid var(--ink);font-weight:700}
+.bill tr.cmp td{border-bottom:0;color:var(--muted)}
+.bill td.good{color:var(--ok);font-weight:700} .bill td.badc{color:var(--bad);font-weight:700}
+.claim{background:var(--ok-soft);color:var(--ok);border-radius:6px;padding:10px 12px;font-weight:700}
+.fine{font-size:.75rem;color:var(--muted)}
+.split{display:flex;height:20px;border-radius:4px;overflow:hidden;font-size:.72rem;font-weight:600;color:#fff}
+.split div{display:flex;align-items:center;padding-left:8px}
+.app{border:8px solid var(--ink);border-radius:26px;padding:14px;display:grid;gap:10px;background:var(--surface);max-width:360px}
+.app .top{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted)}
+.app .kpi{display:flex;gap:10px;align-items:baseline}
+.app .kpi b{font-family:var(--f-display);font-size:2.4rem;line-height:1;color:var(--sun)}
+.app .kpi span{font-size:.86rem}
+.lbl{font-size:.76rem;font-weight:600;color:var(--muted)}
+.months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;align-items:end;height:64px}
+.months div{background:var(--sun);border-radius:2px 2px 0 0}
+.months div.f{background:var(--sun-soft)}
+.axis{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;font-size:.62rem;color:var(--muted);text-align:center}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--surface-2);border-radius:8px;padding:8px 10px;font-size:.74rem;color:var(--muted)}
+.tile b{display:block;font-size:1.05rem;color:var(--ink)}
+.hours{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:2px;align-items:end;height:44px}
+.hours div{background:var(--sun-soft);border-radius:2px 2px 0 0}
+.hours div.g{background:var(--ok)}
+.haxis{display:flex;justify-content:space-between;font-size:.62rem;color:var(--muted)}
+.tip{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:8px 10px;font-size:.82rem}
+.stack{display:grid;gap:14px}
+
+/* choice cards */
+.cards{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media (max-width:560px){.cards{grid-template-columns:minmax(0,1fr)}}
+.card{border:1.5px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;display:grid;align-content:start;background:var(--surface)}
+.card:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
+.card .ch{display:flex;gap:8px;align-items:center;padding:9px 12px;background:var(--surface-2);font-weight:700}
+.card .ch input{accent-color:var(--accent)}
+.card .row{padding:7px 12px;border-top:1px solid var(--line)}
+.card .k{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.card .v{font-size:.9rem;line-height:1.35}
+.optout{grid-column:1/-1}
+.result{border-radius:8px;padding:14px 16px;background:var(--surface-2);display:grid;gap:8px}
+.result b.big{font-family:var(--f-display);font-size:2rem;line-height:1}
+.chip{display:inline-block;font-size:.78rem;padding:2px 9px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+ul.plain{margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:.9rem}
+details.rec{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+details.rec summary{cursor:pointer;font-weight:600;font-size:.88rem}
+.vars{margin-top:10px;font-family:var(--f-mono);font-size:.78rem;background:var(--surface-2);border-radius:6px;padding:10px 12px;display:grid;gap:2px;overflow-x:auto}
+.vars div{white-space:nowrap}
+.vars .k{color:var(--muted)}
+footer{font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="eyebrow">Energy Share Fair</div>
+    <h1>Questionnaire mock-ups</h1>
+    <p class="lede">Click through shortened example screens of the three online instruments. Content, prices and the provider are fictitious.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Demos">
+    <button type="button" role="tab" id="tab-survey" aria-controls="survey" aria-selected="true" data-tab="survey">1 · Survey <span>household and behaviour</span></button>
+    <button type="button" role="tab" id="tab-abtest" aria-controls="abtest" aria-selected="false" data-tab="abtest">2 · A/B test <span>bill and dashboard</span></button>
+    <button type="button" role="tab" id="tab-choice" aria-controls="choice" aria-selected="false" data-tab="choice">3 · Choice experiment <span>offer bundles</span></button>
+  </nav>
+
+  <section class="demo" id="survey" role="tabpanel" aria-labelledby="tab-survey"></section>
+  <section class="demo" id="abtest" role="tabpanel" aria-labelledby="tab-abtest" hidden></section>
+  <section class="demo" id="choice" role="tabpanel" aria-labelledby="tab-choice" hidden></section>
+
+  <footer>Mock-ups only. The real questionnaires will be longer, fielded in German and finalised after a pretest.</footer>
+</div>
+
+<script>
+(function(){
+  /* ---------- helpers ---------- */
+  var uid = 0;
+  function opts(demo, name, list, st, row, type){
+    type = type || 'radio';
+    return '<div class="opts' + (row ? ' row' : '') + '">' + list.map(function(o, i){
+      var v = String(i), id = demo + '-' + name + '-' + i;
+      var on = type === 'radio' ? st.ans[name] === v : (st.ans[name] || []).indexOf(v) > -1;
+      return '<label class="opt" for="' + id + '"><input type="' + type + '" id="' + id + '" name="' + name + '" value="' + v + '"' + (on ? ' checked' : '') + '><span>' + o + '</span></label>';
+    }).join('') + '</div>';
+  }
+  function q(legend, inner){ return '<fieldset class="q"><legend>' + legend + '</legend>' + inner + '</fieldset>'; }
+  function radios(demo, name, legend, list, st, row){ return q(legend, opts(demo, name, list, st, row, 'radio')); }
+  function checks(demo, name, legend, list, st, row){ return q(legend, opts(demo, name, list, st, row, 'checkbox')); }
+  function slider(demo, name, label, min, max, st, lo, hi){
+    var id = demo + '-' + name, v = st.ans[name] != null ? st.ans[name] : Math.round((min + max) / 2);
+    return '<div class="range"><label for="' + id + '">' + label + '</label><input type="range" id="' + id + '" name="' + name + '" min="' + min + '" max="' + max + '" value="' + v + '"><div class="ends"><span>' + lo + '</span><span>' + hi + '</span></div></div>';
+  }
+  function matrix(demo, name, legend, rows, cols, st){
+    var h = '<div class="grid-wrap"><table class="grid"><thead><tr><th></th>' + cols.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+    rows.forEach(function(r, i){
+      var nm = name + i;
+      h += '<tr><td>' + r + '</td>' + cols.map(function(c, j){
+        var id = demo + '-' + nm + '-' + j;
+        return '<td><input type="radio" id="' + id + '" name="' + nm + '" value="' + j + '" aria-label="' + r + ': ' + c + '"' + (st.ans[nm] === String(j) ? ' checked' : '') + '></td>';
+      }).join('') + '</tr>';
+    });
+    return q(legend, h + '</tbody></table></div>');
+  }
+  var MONTHS = [12, 18, 29, 41, 49, 53, 54, 49, 39, 27, 15, 10];
+  function hoursStrip(){
+    var h = '';
+    for (var k = 0; k < 24; k++){
+      var v = Math.exp(-0.5 * Math.pow((k + 0.5 - 13.2) / 2.6, 2));
+      h += '<div class="' + (k >= 11 && k < 15 ? 'g' : '') + '" style="height:' + Math.max(2, v * 44).toFixed(1) + 'px"></div>';
+    }
+    return '<div class="lbl">Tomorrow: most community power 11:00 to 15:00</div><div class="hours" aria-label="Community power tomorrow by hour">' + h + '</div><div class="haxis"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>';
+  }
+
+  /* ---------- generic demo engine ---------- */
+  function Demo(id, cfg){
+    var root = document.getElementById(id), st, i;
+    root.innerHTML = (cfg.toolbar || '') +
+      '<div class="device"><div class="bar"><span>' + cfg.title + '</span><span class="stepno"></span></div><div class="prog"><i></i></div>' +
+      '<div class="screen" aria-live="polite"></div><div class="nav"><button type="button" class="btn back">Back</button><button type="button" class="btn primary next">Next</button></div></div>' +
+      '<details class="rec"><summary>What gets recorded</summary><div class="vars"></div></details>';
+    var scr = root.querySelector('.screen'), vars = root.querySelector('.vars');
+    function panel(){
+      var rows = cfg.record(st);
+      vars.innerHTML = rows.length ? rows.map(function(r){ return '<div><span class="k">' + r[0] + ' = </span>' + r[1] + '</div>'; }).join('') : '<div class="k">Nothing yet</div>';
+    }
+    function draw(){
+      var step = cfg.steps[i];
+      scr.innerHTML = step(st, api);
+      scr.querySelectorAll('input,select').forEach(function(el){
+        function h(){
+          if (el.type === 'checkbox'){
+            st.ans[el.name] = Array.prototype.map.call(scr.querySelectorAll('input[name="' + el.name + '"]:checked'), function(x){ return x.value; });
+          } else if (el.type === 'radio'){ if (el.checked) st.ans[el.name] = el.value; }
+          else { st.ans[el.name] = el.value; }
+          panel();
+        }
+        el.addEventListener('change', h); el.addEventListener('input', h);
+      });
+      root.querySelector('.stepno').textContent = 'Screen ' + (i + 1) + ' of ' + cfg.steps.length;
+      root.querySelector('.prog i').style.width = ((i + 1) / cfg.steps.length * 100) + '%';
+      root.querySelector('.back').disabled = i === 0;
+      var nx = root.querySelector('.next');
+      nx.textContent = i === cfg.steps.length - 1 ? 'Start again' : (i === 0 ? 'Start' : 'Next');
+      panel();
+    }
+    var api = {
+      restart: function(keep){ st = cfg.init(keep ? st : null); i = 0; draw(); },
+      go: function(k){ i = k; draw(); },
+      redraw: function(){ draw(); },
+      state: function(){ return st; }
+    };
+    root.querySelector('.next').addEventListener('click', function(){
+      if (i === cfg.steps.length - 1){ api.restart(); return; }
+      i++; draw(); root.querySelector('.device').scrollIntoView({block: 'nearest'});
+    });
+    root.querySelector('.back').addEventListener('click', function(){ if (i > 0){ i--; draw(); } });
+    if (cfg.wire) cfg.wire(root, api);
+    api.restart();
+    return api;
+  }
+
+  /* ---------- 1 · survey ---------- */
+  var S = 'sv';
+  var PRES_ROWS = ['Morning (6–9)', 'Midday (9–14)', 'Afternoon (14–18)', 'Evening (18–23)'];
+  var APPL = ['Dishwasher', 'Tumble dryer', 'Electric water heater', 'Heat pump', 'Electric car', 'Rooftop or balcony solar panels'];
+  var BEN = ['Citizen’s income (Bürgergeld)', 'Housing benefit (Wohngeld)', 'Basic income support (Grundsicherung)', 'Child supplement (Kinderzuschlag)', 'None of these'];
+  var TRUST = ['Local energy cooperative', 'Municipal utility', 'Private energy company'];
+  var FAIR = ['Equally among members', 'By how much each member uses', 'More for low-income households', 'More for those who use power at sunny times'];
+  Demo('survey', {
+    title: 'Survey · about 20 minutes in full',
+    init: function(){ return {ans: {}}; },
+    steps: [
+      function(){ return '<h2>Energy use in your household</h2><p class="help">This shortened demo shows a few questions from each part of the survey. There are no right or wrong answers.</p>' +
+        '<ul class="plain"><li>Your household and your home</li><li>When someone is at home</li><li>Electricity use and appliances</li><li>Your situation</li><li>Skills, trust and views</li></ul>'; },
+      function(st){ return '<h2>Your household and your home</h2>' +
+        radios(S, 'decide', 'Who decides on your household’s electricity contract?', ['I do, alone', 'I do, together with others', 'Someone else'], st) +
+        radios(S, 'tenure', 'Do you rent or own your home?', ['Rent from a private landlord', 'Rent from a housing cooperative', 'Rent from a municipal or social landlord', 'Own'], st) +
+        '<div class="inline"><label for="sv-adults"><b>Adults in the household</b></label><input type="number" id="sv-adults" name="adults" min="1" max="10" value="' + (st.ans.adults || 2) + '">' +
+        '<label for="sv-kids"><b>Children under 14</b></label><input type="number" id="sv-kids" name="kids" min="0" max="10" value="' + (st.ans.kids || 0) + '"></div>'; },
+      function(st){
+        var cols = ['Weekdays', 'Weekends'], h = '<div class="grid-wrap"><table class="grid"><thead><tr><th></th><th>Weekdays</th><th>Weekends</th></tr></thead><tbody>';
+        PRES_ROWS.forEach(function(r, i){
+          h += '<tr><td>' + r + '</td>' + cols.map(function(c, j){
+            var v = i + '-' + j, on = (st.ans.home || []).indexOf(v) > -1;
+            return '<td><input type="checkbox" id="sv-home-' + v + '" name="home" value="' + v + '" aria-label="' + r + ', ' + c + '"' + (on ? ' checked' : '') + '></td>';
+          }).join('') + '</tr>';
+        });
+        return '<h2>When is usually someone at home?</h2><p class="help">Tick every time slot when at least one person is usually at home and awake. We use this to pick the matching household type for the load profile.</p>' + q('Usually someone at home', h + '</tbody></table></div>');
+      },
+      function(st){ return '<h2>Electricity use and appliances</h2>' +
+        '<div class="inline"><label for="sv-kwh"><b>Electricity used last year (from your bill)</b></label><input type="number" id="sv-kwh" name="kwh" min="0" step="100" placeholder="kWh" value="' + (st.ans.kwh || '') + '"><span class="help">kWh</span></div>' +
+        checks(S, 'appl', 'Which of these do you have?', APPL, st, true) +
+        radios(S, 'wash', 'When does your washing machine usually run?', ['Morning', 'Midday', 'Afternoon', 'Evening', 'Night', 'It varies'], st, true); },
+      function(st){ return '<h2>Your situation</h2>' +
+        radios(S, 'switch', 'Have you switched electricity supplier in the past three years?', ['Yes', 'No', 'Don’t know'], st, true) +
+        radios(S, 'arrears', 'In the past 12 months, were you behind with an energy bill?', ['Yes', 'No', 'Prefer not to say'], st, true) +
+        radios(S, 'liq', 'Could your household pay an unexpected expense of €500 from its own money?', ['Yes', 'No', 'Don’t know'], st, true) +
+        checks(S, 'ben', 'Does your household receive any of these?', BEN, st); },
+      function(st){ return '<h2>Skills, trust and views</h2>' +
+        radios(S, 'online', 'How confident are you filling in forms online?', ['Not at all', 'A little', 'Fairly', 'Very'], st, true) +
+        matrix(S, 'trust', 'How much do you trust these to run an energy offer fairly?', TRUST, ['1 none', '2', '3', '4', '5 full'], st) +
+        radios(S, 'fair', 'What is the fairest way for an energy community to share its surplus?', FAIR, st) +
+        radios(S, 'heard', 'Have you heard of energy sharing?', ['Yes, I know what it is', 'I have heard of it', 'No'], st, true) +
+        slider(S, 'interest', 'How interested would you be in joining an energy community near you?', 0, 10, st, '0 not at all', '10 very'); },
+      function(){ return '<h2>Thank you</h2><p class="help">In the real survey, a few questions on age, education, income and employment follow. Open "What gets recorded" below to see how your answers are stored.</p>'; }
+    ],
+    record: function(st){
+      var a = st.ans, r = [];
+      var L = function(list, v){ return v == null ? null : list[+v]; };
+      if (a.decide != null) r.push(['decider', L(['self', 'joint', 'other'], a.decide)]);
+      if (a.tenure != null) r.push(['tenure', L(['rent_private', 'rent_coop', 'rent_social', 'own'], a.tenure)]);
+      if (a.adults != null || a.kids != null) r.push(['household', (a.adults || 2) + ' adults, ' + (a.kids || 0) + ' children']);
+      if (a.home && a.home.length) r.push(['at_home', a.home.map(function(v){ var p = v.split('-'); return ['morning', 'midday', 'afternoon', 'evening'][+p[0]] + '_' + (p[1] === '0' ? 'wd' : 'we'); }).join(', ')]);
+      if (a.kwh) r.push(['annual_kwh', a.kwh]);
+      if (a.appl && a.appl.length) r.push(['appliances', a.appl.map(function(v){ return ['dishwasher', 'dryer', 'e_water', 'heat_pump', 'ev', 'pv'][+v]; }).join(', ')]);
+      if (a.wash != null) r.push(['wash_time', L(['morning', 'midday', 'afternoon', 'evening', 'night', 'varies'], a.wash)]);
+      if (a.switch != null) r.push(['switched_3y', L(['yes', 'no', 'dk'], a.switch)]);
+      if (a.arrears != null) r.push(['arrears_12m', L(['yes', 'no', 'refused'], a.arrears)]);
+      if (a.liq != null) r.push(['can_pay_500', L(['yes', 'no', 'dk'], a.liq)]);
+      if (a.ben && a.ben.length) r.push(['benefits', a.ben.map(function(v){ return ['buergergeld', 'wohngeld', 'grundsicherung', 'kinderzuschlag', 'none'][+v]; }).join(', ')]);
+      if (a.online != null) r.push(['online_confidence', +a.online + 1 + ' / 4']);
+      TRUST.forEach(function(t, i){ if (a['trust' + i] != null) r.push(['trust_' + ['coop', 'municipal', 'private'][i], +a['trust' + i] + 1 + ' / 5']); });
+      if (a.fair != null) r.push(['fair_rule', L(['equal', 'by_use', 'low_income', 'sunny_hours'], a.fair)]);
+      if (a.heard != null) r.push(['heard_of_sharing', L(['knows', 'heard', 'no'], a.heard)]);
+      if (a.interest != null) r.push(['interest_0_10', a.interest]);
+      return r;
+    }
+  });
+
+  /* ---------- 2 · A/B test ---------- */
+  var V = {A: {inv: 'std', dash: 0, name: 'A · standard statement'}, AD: {inv: 'std', dash: 1, name: 'A + dashboard'},
+           B: {inv: 'item', dash: 0, name: 'B · itemised statement'}, BD: {inv: 'item', dash: 1, name: 'B + dashboard'}};
+  var KEYS = ['A', 'AD', 'B', 'BD'];
+  function statement(v){
+    var head = '<div class="brand">Community Power Sampletown <span>fictitious example</span></div><div style="font-weight:700">Annual electricity statement</div>';
+    if (V[v].inv === 'std') return '<div class="letter">' + head +
+      '<table class="bill"><tbody><tr><td>Your consumption</td><td class="n">2,000 kWh</td></tr><tr class="sum"><td>Total for the year</td><td class="n">€761.00</td></tr>' +
+      '<tr><td>Already paid (12 × €65.00)</td><td class="n">€780.00</td></tr><tr><td>Credit to your account</td><td class="n">€19.00</td></tr><tr><td>New monthly instalment</td><td class="n">€64.00</td></tr></tbody></table>' +
+      '<div class="claim">Thanks to your energy community you saved about €195 this year.*</div><div class="fine">* Compared with basic supply.</div></div>';
+    return '<div class="letter">' + head +
+      '<div class="lbl">Where your electricity came from</div><div class="split"><div style="width:33%;background:var(--sun)">Community 33%</div><div style="width:67%;background:var(--res)">Residual supply 67%</div></div>' +
+      '<table class="bill"><tbody><tr><td>Community power 660 kWh × 24.0 ct</td><td class="n">€158.40</td></tr><tr><td>Residual power 1,340 kWh × 34.0 ct</td><td class="n">€455.60</td></tr>' +
+      '<tr><td>Base price 12 × €11.00</td><td class="n">€132.00</td></tr><tr><td>Community service fee 12 × €2.50</td><td class="n">€30.00</td></tr><tr><td>Credit from community surplus</td><td class="n">−€15.00</td></tr>' +
+      '<tr class="sum"><td>Your annual cost</td><td class="n">€761.00</td></tr><tr class="cmp"><td>Basic supply would have cost €956.00</td><td class="n good">€195 cheaper</td></tr>' +
+      '<tr class="cmp"><td>A cheap market tariff would have cost €752.00</td><td class="n badc">€9 more</td></tr></tbody></table><div class="fine">New monthly instalment: €64.00</div></div>';
+  }
+  function dashboard(compact){
+    if (compact) return '<div class="app"><div class="top"><span class="brand" style="font-size:.72rem">Community app</span><span>Tomorrow</span></div>' + hoursStrip() + '</div>';
+    var bars = MONTHS.map(function(m, i){ return '<div class="' + (i > 9 ? 'f' : '') + '" style="height:' + (m * 1.15).toFixed(1) + 'px" title="' + m + '%"></div>'; }).join('');
+    return '<div class="app"><div class="top"><span class="brand" style="font-size:.72rem">Community app</span><span>October</span></div>' +
+      '<div class="kpi"><b>27%</b><span>of your electricity this month came from the community</span></div>' +
+      '<div class="lbl">Share from the community, by month</div><div class="months" aria-label="Share from the community by month">' + bars + '</div>' +
+      '<div class="axis"><span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span></div>' +
+      '<div class="tiles"><div class="tile">Cost so far this year<b>€634</b></div><div class="tile">Year average from the community<b>33%</b></div></div>' +
+      hoursStrip() + '<div class="tip">Tip: run the washing machine around midday to use more community power.</div></div>';
+  }
+  var QUIZ = [
+    {n: 'q1', t: 'About how much of your electricity came from the community?', o: ['Almost all (over 80%)', 'About one third', 'Less than 5%', 'Don’t know'], c: 1, why: 'About one third (660 of 2,000 kWh).'},
+    {n: 'q2', t: 'What do you pay for electricity the community cannot supply, for example in winter?', o: ['The residual price of my supplier', 'The same price as community power', 'Nothing, the community covers it', 'Don’t know'], c: 0, why: 'The residual price of the supplier (34 ct instead of 24 ct).'},
+    {n: 'q3', t: 'Compared with a cheap market tariff, this offer is…', o: ['Clearly cheaper', 'About the same', 'Clearly more expensive', 'Don’t know'], c: 1, why: 'About the same: €761 against €752.'}
+  ];
+  var SLOTS = ['07:00', '09:00', '12:00', '16:00', '19:00', '22:00'];
+  var A = 'ab';
+  Demo('abtest', {
+    title: 'A/B test · bill and dashboard',
+    toolbar: '<div class="toolbar"><label for="ab-ver">Version shown</label><select id="ab-ver"><option value="rand">Random (as in the study)</option><option value="A">A · standard statement</option><option value="AD">A + dashboard</option><option value="B">B · itemised statement</option><option value="BD">B + dashboard</option></select><span>Each participant sees one of the four versions.</span></div>',
+    init: function(){
+      var sel = document.getElementById('ab-ver'), pick = sel && sel.value !== 'rand' ? sel.value : KEYS[Math.floor(Math.random() * 4)];
+      return {ans: {}, v: pick};
+    },
+    wire: function(root, api){
+      root.querySelector('#ab-ver').addEventListener('change', function(){
+        var st = api.state(); st.v = this.value === 'rand' ? KEYS[Math.floor(Math.random() * 4)] : this.value; st.ans = {}; api.go(1);
+      });
+    },
+    steps: [
+      function(){ return '<h2>Your annual statement</h2><p class="help">Imagine you have been a member of an energy community for one year and have just received your annual electricity statement. Please read it carefully. A few questions follow.</p>'; },
+      function(st){ return '<h2>Please read your statement' + (V[st.v].dash ? ' and your community app' : '') + '</h2><div class="stack">' + statement(st.v) + (V[st.v].dash ? dashboard(false) : '') + '</div>'; },
+      function(st){ return '<h2>Questions about your statement</h2><p class="help">Please answer without going back.</p>' +
+        QUIZ.map(function(x){ return radios(A, x.n, x.t, x.o, st); }).join('') +
+        slider(A, 'conf', 'How sure are you about your answers?', 0, 10, st, 'not sure at all', 'completely sure') +
+        slider(A, 'intent', 'Based on this statement, how likely would you be to choose this offer?', 0, 10, st, 'very unlikely', 'very likely'); },
+      function(st){ return '<h2>Tomorrow you want to run your washing machine (about two hours). When would you start it?</h2>' +
+        (V[st.v].dash ? '<p class="help">Your community app shows:</p>' + dashboard(true) : '<p class="help">Choose the time that suits you best.</p>') +
+        radios(A, 'slot', 'Start time', SLOTS, st, true); },
+      function(st){
+        var sc = QUIZ.filter(function(x){ return st.ans[x.n] === String(x.c); }).length;
+        var others = KEYS.filter(function(k){ return k !== st.v; });
+        return '<h2>Your result</h2><div class="result"><span class="chip">You saw version ' + V[st.v].name + '</span><b class="big">' + sc + ' of 3</b><span>questions answered correctly</span></div>' +
+          '<ul class="plain">' + QUIZ.map(function(x){ return '<li>' + x.why + '</li>'; }).join('') + '</ul>' +
+          '<p class="help">' + (V[st.v].inv === 'std' ? 'The standard statement does not show these facts. Comparing how often people get them right across the four versions is the test.' : 'The itemised statement shows all three facts. Comparing how often people get them right across the four versions is the test.') +
+          (st.ans.slot != null ? ' You would start at ' + SLOTS[+st.ans.slot] + (SLOTS[+st.ans.slot] === '12:00' ? ', inside the sunny window.' : ', outside the sunny window (11:00 to 15:00).') : '') + '</p>' +
+          '<p class="help">Try another version with the menu above, for example ' + V[others[0]].name + '.</p>';
+      }
+    ],
+    record: function(st){
+      var r = [['version', st.v], ['invoice', V[st.v].inv], ['dashboard', V[st.v].dash]], sc = 0, any = false;
+      QUIZ.forEach(function(x){ if (st.ans[x.n] != null){ any = true; var ok = st.ans[x.n] === String(x.c); if (ok) sc++; r.push([x.n + '_correct', ok ? 1 : 0]); } });
+      if (any) r.push(['comprehension', sc + ' / 3']);
+      if (st.ans.conf != null) r.push(['confidence_0_10', st.ans.conf]);
+      if (st.ans.intent != null) r.push(['intention_0_10', st.ans.intent]);
+      if (st.ans.slot != null){ r.push(['wash_start', SLOTS[+st.ans.slot]]); r.push(['in_sunny_window', SLOTS[+st.ans.slot] === '12:00' ? 1 : 0]); }
+      return r;
+    }
+  });
+
+  /* ---------- 3 · choice experiment ---------- */
+  var ATT = [
+    ['cost', 'Monthly cost compared with today', ['€3 more per month', '€3 less per month', '€8 less per month', '€15 less per month'], [3, -3, -8, -15]],
+    ['entry', 'One-off entry (refunded when you leave)', ['None', '€50', '€250', '€500'], [0, 50, 250, 500]],
+    ['signup', 'Registration', ['Online, about 5 minutes', 'Paper form and documents, about 45 minutes', 'Appointment: an advisor fills it in with you'], ['online', 'paper', 'assisted']],
+    ['bill', 'Bill', ['Total amount only', 'Itemised: community power, residual power, fees', 'Itemised, plus a monthly app dashboard'], ['total', 'itemised', 'itemised_app']],
+    ['oper', 'Who runs it', ['Local energy cooperative', 'Municipal utility', 'Private energy company'], ['coop', 'municipal', 'private']],
+    ['share', 'How the surplus is shared', ['Equally among members', 'By how much each member uses', 'More for low-income households', 'Bonus for using power at sunny times'], ['equal', 'by_use', 'low_income', 'sunny_bonus']],
+    ['term', 'Minimum term', ['Cancel monthly', '12 months', '24 months'], [1, 12, 24]]
+  ];
+  // fixed demo design: [cost, entry, signup, bill, oper, share, term] for offer A and B
+  var TASKS = [
+    [[2, 2, 0, 2, 0, 2, 1], [3, 3, 1, 0, 1, 0, 0]],
+    [[1, 0, 2, 1, 1, 1, 0], [2, 1, 0, 0, 2, 0, 2]],
+    [[0, 0, 0, 2, 0, 3, 0], [3, 2, 2, 1, 2, 1, 1]],
+    [[2, 3, 2, 0, 0, 0, 2], [1, 1, 1, 2, 1, 2, 1]],
+    [[3, 1, 1, 1, 2, 3, 2], [2, 0, 0, 0, 0, 1, 0]],
+    [[1, 2, 0, 2, 1, 0, 0], [0, 0, 2, 1, 0, 2, 1]]
+  ];
+  var FLEX = [
+    ['What you do', ['App signal "now is a good time"; you decide', 'Automatic control of one appliance, override any time']],
+    ['How often', ['Up to 4 times a month', 'Up to 12 times a month']],
+    ['Your reward per year', ['€60', '€120']],
+    ['Who gets the avoided grid costs', ['You personally', 'The community fund']]
+  ];
+  function card(name, label, alt, rows, st){
+    var id = 'ce-' + name + '-' + alt;
+    return '<label class="card" for="' + id + '"><span class="ch"><input type="radio" id="' + id + '" name="' + name + '" value="' + alt + '"' + (st.ans[name] === alt ? ' checked' : '') + '>' + label + '</span>' +
+      rows.map(function(r){ return '<div class="row"><div class="k">' + r[0] + '</div><div class="v">' + r[1] + '</div></div>'; }).join('') + '</label>';
+  }
+  function optOut(name, text, st){
+    var id = 'ce-' + name + '-none';
+    return '<label class="opt optout" for="' + id + '"><input type="radio" id="' + id + '" name="' + name + '" value="none"' + (st.ans[name] === 'none' ? ' checked' : '') + '><span>' + text + '</span></label>';
+  }
+  function taskStep(k){
+    return function(st){
+      var rows = function(lv){ return ATT.map(function(a, j){ return [a[1], a[2][lv[j]]]; }); };
+      return '<h2>Which offer would you choose? <span class="help" style="font-weight:400">Choice ' + (k + 1) + ' of ' + TASKS.length + '</span></h2>' +
+        '<div class="cards">' + card('t' + k, 'Offer A', 'A', rows(TASKS[k][0]), st) + card('t' + k, 'Offer B', 'B', rows(TASKS[k][1]), st) +
+        optOut('t' + k, 'Neither. I keep my current electricity contract.', st) + '</div>';
+    };
+  }
+  var ceSteps = [
+    function(){ return '<h2>Choosing between energy-sharing offers</h2><p class="help">With energy sharing, part of your electricity comes from solar or wind plants near you and is shared among the members of a community. You do not need your own roof.</p>' +
+      '<p>On the next screens you see two offers at a time. Choose the one you prefer, or keep your current contract. The offers differ only in these features:</p>' +
+      '<ul class="plain">' + ATT.map(function(a){ return '<li>' + a[1] + '</li>'; }).join('') + '</ul><p class="help">The demo has six choices; the real study uses a few more.</p>'; }
+  ];
+  TASKS.forEach(function(_, k){ ceSteps.push(taskStep(k)); });
+  ceSteps.push(function(st){
+    return '<h2>Using power when there is plenty</h2><p class="help">Sometimes the community produces more power than is used, or the grid is under strain. If households shift their use, grid costs fall. Which option would you choose?</p>' +
+      '<div class="cards">' + card('flex', 'Option A', 'A', FLEX.map(function(f){ return [f[0], f[1][0]]; }), st) + card('flex', 'Option B', 'B', FLEX.map(function(f){ return [f[0], f[1][1]]; }), st) +
+      optOut('flex', 'I would not take part in either.', st) + '</div>';
+  });
+  ceSteps.push(function(st){
+    var picked = [], kept = 0;
+    TASKS.forEach(function(t, k){ var c = st.ans['t' + k]; if (c === 'A') picked.push(t[0]); else if (c === 'B') picked.push(t[1]); else if (c === 'none') kept++; });
+    var avg = function(j){ return picked.length ? Math.round(picked.reduce(function(s, lv){ return s + ATT[j][3][lv[j]]; }, 0) / picked.length) : null; };
+    var count = function(j, lvl){ return picked.filter(function(lv){ return lv[j] === lvl; }).length; };
+    var answered = picked.length + kept;
+    return '<h2>Your choices</h2>' + (answered ? '<div class="result"><b class="big">' + picked.length + ' of ' + TASKS.length + '</b><span>times you chose an offer; ' + kept + ' times you kept your contract</span></div>' +
+      (picked.length ? '<ul class="plain"><li>Average entry cost of the offers you chose: €' + avg(1) + '</li><li>Average monthly change of the offers you chose: ' + (avg(0) > 0 ? '+' : '') + '€' + avg(0) + '</li>' +
+      '<li>Offers run by a local cooperative among your choices: ' + count(4, 0) + '</li><li>Offers with assisted registration among your choices: ' + count(2, 2) + '</li></ul>' : '') : '<p class="help">You have not made any choices yet. Go back and pick offers.</p>') +
+      '<p class="help">In the study, the choices of about 1,200 people are combined to estimate what each feature is worth to whom, for example how much a lower entry cost or an assisted registration raises the chance of joining.</p>';
+  });
+  Demo('choice', {
+    title: 'Choice experiment · offer bundles',
+    init: function(){ return {ans: {}}; },
+    steps: ceSteps,
+    record: function(st){
+      var r = [];
+      TASKS.forEach(function(t, k){
+        var c = st.ans['t' + k]; if (c == null) return;
+        var lv = c === 'A' ? t[0] : c === 'B' ? t[1] : null;
+        r.push(['choice_' + (k + 1), c === 'none' ? 'opt-out' : 'offer ' + c + ' (' + ATT.map(function(a, j){ return a[0] + '=' + a[3][lv[j]]; }).join(', ') + ')']);
+      });
+      if (st.ans.flex != null) r.push(['flex_choice', st.ans.flex === 'none' ? 'opt-out' : 'option ' + st.ans.flex]);
+      return r;
+    }
+  });
+
+  /* ---------- tabs ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[data-tab]'));
+  function show(id, push){
+    tabs.forEach(function(b){ var on = b.dataset.tab === id; b.setAttribute('aria-selected', on ? 'true' : 'false'); document.getElementById(b.dataset.tab).hidden = !on; });
+    if (push){ try { history.replaceState(null, '', '#' + id); } catch (e) { /* ignore */ } }
+  }
+  tabs.forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.tab, true); }); });
+  var h = (location.hash || '').replace('#', '');
+  if (['survey', 'abtest', 'choice'].indexOf(h) > -1) show(h, false);
+})();
+</script>
+</body>
+</html>
