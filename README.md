@@ -2,7 +2,7 @@
 
 Clickable mock-ups of the three online instruments planned for the ENERGY SHARE FAIR research project. They show what participants would see; they are not the final questionnaires.
 
-**Live demo:** `https://<your-username>.github.io/esf-demos/`
+**Live demo:**
 
 | Tab | Link | What it shows |
 |---|---|---|
